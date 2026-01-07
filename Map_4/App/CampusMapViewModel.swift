@@ -35,6 +35,7 @@ enum Campus: String, CaseIterable, Identifiable {
 }
 
 class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+
     @Published var cameraPosition: MapCameraPosition = Campus.jinpenling.position
     @Published var selectedCampus: Campus = .jinpenling {
         didSet { cameraPosition = selectedCampus.position }
@@ -44,6 +45,8 @@ class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
     @Published var selectedCategory: Category = .all
 
     @Published var userLocation: CLLocation?
+
+    @Published var selectedPlace: Place?
 
     // 2. 新增：计算属性，返回过滤后的地点
     var filteredPlaces: [Place] {
@@ -56,6 +59,7 @@ class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
 
     // 3. 新增：选择地点并跳转地图
     func selectPlace(_ place: Place) {
+        selectedPlace = place
         withAnimation(.easeInOut(duration: 0.3)) {
             cameraPosition = .region(
                 MKCoordinateRegion(
@@ -79,29 +83,45 @@ class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+
+        // 1. 更新用户位置
+        guard location.horizontalAccuracy < 100 && location.verticalAccuracy < 100 else { return }
         userLocation = location
+        // 获取到位置后停止更新，节省电量
+        manager.stopUpdatingLocation()
+
+        withAnimation(.easeInOut(duration: 0.8)) {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: location.coordinate,
+                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                )
+            )
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location update failed: \(error)")
     }
 
-
     //MARK: 计算距离和时间
     func getDistanceInfo(for place: Place) -> (distance: String, time: String)? {
         guard let userLoc = userLocation else { return nil }
 
-        let destination = CLLocation(latitude: place.location.latitude, longitude: place.location.longitude)
+        let destination = CLLocation(
+            latitude: place.location.latitude,
+            longitude: place.location.longitude
+        )
         let distanceInMeters = userLoc.distance(from: destination)
 
         //格式化距离
-        let distanceString : String
+        let distanceString: String
         if distanceInMeters < 1000 {
             distanceString = "\(Int(distanceInMeters))m"
         } else {
             distanceString = String(format: "%.1fkm", distanceInMeters / 1000)
         }
-        
+
         let minutes = Int(distanceInMeters / (1.2 * 60))
         var timeString = ""
         if minutes > 60 {
@@ -109,7 +129,6 @@ class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
         } else {
             timeString = minutes >= 1 ? "\(minutes)分钟" : "1分钟内"
         }
-
         return (distanceString, timeString)
     }
 }

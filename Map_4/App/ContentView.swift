@@ -18,6 +18,15 @@ struct CampusMapView: View {
                 // MARK: 1. 地图视图
                 Map(position: $viewModel.cameraPosition) {
                     UserAnnotation()
+
+                    if let selectedPlace = viewModel.selectedPlace {
+                        Marker(
+                            selectedPlace.name,
+                            systemImage: selectedPlace.category.icon,
+                            coordinate: selectedPlace.location
+                        )
+                        .tint(.blue)
+                    }
                 }
                 .mapControls { MapUserLocationButton() }
                 .frame(height: 200)
@@ -49,7 +58,8 @@ struct CampusMapView: View {
                                 action: {
                                     viewModel.selectPlace(place)
                                 },
-                                distanceInfo: viewModel.getDistanceInfo(for: place)
+                                distanceInfo: viewModel.getDistanceInfo(for: place),
+                                isSelected: viewModel.selectedPlace?.id == place.id
                             )
                         }
                         .padding(.horizontal)
@@ -99,6 +109,7 @@ struct PlaceRowView: View {
     let place: Place
     let action: () -> Void
     let distanceInfo: (distance: String, time: String)? // 传入信息
+    let isSelected: Bool
 
     var body: some View {
         Button(action: action) {
@@ -135,7 +146,6 @@ struct PlaceRowView: View {
                             Image(systemName: "figure.walk")
                             VStack {
                                 Text("\(info.distance)")
-//                                    .foregroundColor(.white)
                                 Text(" \(info.time)")
                             }
                             .font(.caption)
@@ -152,14 +162,29 @@ struct PlaceRowView: View {
                 }
             }
             .padding()
-            .background(Color(.systemBackground))
+            .background(
+                isSelected 
+                ? Color.blue.opacity(0.1) 
+                : Color(.systemBackground)
+            )
             .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
+            .shadow(
+                color: isSelected
+                ? Color.blue.opacity(0.1) 
+                : Color.black.opacity(0.03),
+                radius: 8, x: 0, y: 4
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.systemGray6), lineWidth: 1)
+                    .stroke(
+                        isSelected
+                        ? Color.blue
+                        : Color(.systemGray6),
+                        lineWidth: isSelected ? 2 : 1
+                    )
             )
         }
+        .padding(.vertical, 4)
     }
 }
 

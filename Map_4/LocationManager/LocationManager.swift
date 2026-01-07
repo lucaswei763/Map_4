@@ -28,7 +28,7 @@ struct Place: Identifiable {
     let id = UUID()
     let name: String
     let category: Category
-    let campus: Campus // 新增：所属校区
+    let campus: Campus
     let location: CLLocationCoordinate2D
 }
 
