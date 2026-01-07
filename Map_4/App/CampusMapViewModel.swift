@@ -103,7 +103,12 @@ class CampusMapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
         }
         
         let minutes = Int(distanceInMeters / (1.2 * 60))
-        let timeString = minutes >= 1 ? "\(minutes)分钟" : "1分钟内"
+        var timeString = ""
+        if minutes > 60 {
+            timeString = "\(minutes / 60)小时"
+        } else {
+            timeString = minutes >= 1 ? "\(minutes)分钟" : "1分钟内"
+        }
 
         return (distanceString, timeString)
     }

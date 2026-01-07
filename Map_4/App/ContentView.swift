@@ -129,15 +129,21 @@ struct PlaceRowView: View {
                 Spacer()
 
                 HStack {
-                    VStack {
+                    HStack {
                         //显示距离和时间
                         if let info = distanceInfo {
-                            Text("\(info.distance)")
-                            Text(" \(info.time)")
+                            Image(systemName: "figure.walk")
+                            VStack {
+                                Text("\(info.distance)")
+//                                    .foregroundColor(.white)
+                                Text(" \(info.time)")
+                            }
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            
                         }
                     }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    
                     
                     // 右侧箭头
                     Image(systemName: "arrow.turn.up.right")
